@@ -1,109 +1,117 @@
-# حساب عزم دوران محركات ذراع الروبوت واختيار المحركات المناسبة
+
+# Robotic Arm Torque Calculation and Servo Motor Selection
 
 ---
 
-## 1. طريقة حساب عزم الدوران لكل محرك في ذراع الروبوت
+## 1. Torque Calculation Method for Each Joint Motor
 
-### 1.1 فهم الأحمال على المفاصل
+### 1.1 Understanding Loads on Joints
 
-ذراع الروبوت مكون من عدة مفاصل، وكل مفصل يحتاج يعوض:
+The robotic arm consists of multiple joints.  
+Each joint must compensate for:
 
-- وزن الحمولة التي يحملها (payload)
-- وزن أجزاء الذراع التي تقع بعد هذا المفصل (الأجزاء الخارجية للمفصل)
+- The payload weight it carries  
+- The weight of arm segments located beyond that joint (external parts)
 
-### 1.2 معطيات أساسية
+### 1.2 Basic Parameters
 
-- وزن الحمولة \( m_{payload} \) (كجم)
-- أوزان أجزاء الذراع \( m_1, m_2, ..., m_n \) (كجم)
-- طول كل جزء من الذراع \( L_1, L_2, ..., L_n \) (متر)
-- تسارع الجاذبية الأرضية \( g = 9.81 \, m/s^2 \)
+- Payload weight `m_payload` (kg)  
+- Weights of arm segments `m1, m2, ..., mn` (kg)  
+- Length of each arm segment `L1, L2, ..., Ln` (meters)  
+- Gravitational acceleration `g = 9.81 m/s²`
 
-### 1.3 المعادلة العامة لعزم الدوران في المفصل \( i \):
+### 1.3 General Torque Formula at Joint *i*
 
-\[
-\tau_i = g \times \sum_{j=i}^{n} m_j \times d_{ij}
-\]
+```
+τᵢ = g × Σ (from j = i to n) [ mⱼ × dᵢⱼ ]
+```
 
-- \( \tau_i \): عزم الدوران المطلوب في المفصل \( i \) (نيوتن.متر)
-- \( m_j \): وزن الجزء \( j \) أو الحمولة إذا كانت \( j=n \)
-- \( d_{ij} \): المسافة الرأسية من محور المفصل \( i \) إلى مركز ثقل الجزء \( j \) (متر)
-
-### 1.4 مثال عملي (ذراع مكون من 3 مفاصل)
-
-| المفصل       | الوزن \(m_j\) (كجم) | طول الجزء \(L_j\) (م) | مركز الثقل (تقريبًا) (م) |
-|--------------|---------------------|-----------------------|--------------------------|
-| 3 (الأبعد)   | 1 (حمولة)           | -                     | 0                        |
-| 2            | 0.5                 | 0.2                   | 0.1                      |
-| 1 (الأقرب)   | 0.7                 | 0.3                   | 0.15                     |
-
-- حساب العزم في المفصل 3:
-
-\[
-\tau_3 = 9.81 \times 1 \times 0 = 0 \quad \text{(تقريبًا لأن الحمولة على المفصل مباشرة)}
-\]
-
-- حساب العزم في المفصل 2:
-
-\[
-\tau_2 = 9.81 \times (1 \times 0.1) = 0.981 \quad \text{نيوتن.متر}
-\]
-
-- حساب العزم في المفصل 1:
-
-\[
-\tau_1 = 9.81 \times \big(0.7 \times 0.15 + 0.5 \times (0.3 + 0.1) + 1 \times (0.3 + 0.2 + 0.1) \big)
-\]
-
-\[
-\tau_1 = 9.81 \times (0.105 + 0.2 + 0.6) = 9.81 \times 0.905 = 8.88 \quad \text{نيوتن.متر}
-\]
-
-### 1.5 احتياطي الأمان
-
-- يُفضل اختيار محركات عزمها أكبر من الحساب بحوالي 20-30%.
+Where:  
+- `τᵢ` is the required torque at joint `i` (N·m)  
+- `mⱼ` is the mass of segment `j` or payload if `j = n`  
+- `dᵢⱼ` is the vertical distance from joint `i` to the center of mass of segment `j` (in meters)
 
 ---
 
-## 2. اختيار محركات السيرفو المناسبة
+### 1.4 Practical Example (3-Joint Arm)
 
-| المحرك                 | العزم (نيوتن.متر) | رابط الشراء                                   |
-|------------------------|-------------------|-----------------------------------------------|
-| Dynamixel MX-64        | 6.0               | https://www.robotis.us/dynamixel-mx-64/       |
-| MG995 High Torque Servo| 1.8               | https://www.amazon.com/dp/B00DJYH7L6           |
-| Hitec HS-805BB         | 2.2               | https://www.amazon.com/dp/B0038WL9EO           |
+| Joint       | Mass `mⱼ` (kg) | Segment Length `Lⱼ` (m) | Center of Mass Approx. `dᵢⱼ` (m) |
+|-------------|----------------|--------------------------|-----------------------------------|
+| Joint 3     | 1 (Payload)     | -                        | 0                                 |
+| Joint 2     | 0.5            | 0.2                      | 0.1                               |
+| Joint 1     | 0.7            | 0.3                      | 0.15                              |
 
-- تأكد من اختيار المحرك حسب العزم المطلوب في كل مفصل مع الأخذ بالاعتبار احتياطي الأمان.
+- **Torque at Joint 3:**
 
----
+```
+τ₃ = 9.81 × 1 × 0 = 0 N·m
+```
 
-## 3. رفع وزن الحمولة إلى 2 كجم باستخدام التروس
+- **Torque at Joint 2:**
 
-- يمكنك استخدام التروس لزيادة العزم الناتج عن المحرك، بنسبة التخفيض المطلوبة.
-- مثال: تخفيض بنسبة 2:1 يزيد العزم ضعفًا لكنه يقلل السرعة للنصف.
+```
+τ₂ = 9.81 × (1 × 0.1) = 0.981 N·m
+```
 
----
+- **Torque at Joint 1:**
 
-## 4. سلبيات التروس
-
-- تقليل سرعة الحركة.
-- زيادة الحجم والوزن.
-- فقدان الطاقة بسبب الاحتكاك.
-- زيادة التعقيد في التركيب والصيانة.
-
----
-
-## 5. بدائل لتجنب سلبيات التروس
-
-- اختيار محركات ذات عزم أعلى بدون الحاجة لتروس.
-- استخدام مواد أخف وزنًا لتقليل الحمل على المحركات.
-- تحسين تصميم الذراع والتحكم الذكي.
-- استخدام مساعدات هيدروليكية أو هوائية في حالات الأوزان الثقيلة.
+```
+τ₁ = 9.81 × [ (0.7 × 0.15) + (0.5 × (0.3 + 0.1)) + (1 × (0.3 + 0.2 + 0.1)) ]
+    = 9.81 × [ 0.105 + 0.2 + 0.6 ]
+    = 9.81 × 0.905 = 8.88 N·m
+```
 
 ---
 
-## 6. مراجع
+### 1.5 Safety Margin
 
-- دليل روبوتات Dynamixel
-- حساب عزم دوران الروبوت
-- شرح أنظمة التروس
- 
+It is recommended to choose motors with **20–30% higher torque** than the calculated value.
+
+---
+
+## 2. Choosing Suitable Servo Motors
+
+| Motor                   | Torque (N·m) | Purchase Link                                           |
+|-------------------------|--------------|----------------------------------------------------------|
+| Dynamixel MX-64         | 6.0          | [Link](https://www.robotis.us/dynamixel-mx-64/)          |
+| MG995 High Torque Servo | 1.8          | [Link](https://www.amazon.com/dp/B00DJYH7L6)             |
+| Hitec HS-805BB          | 2.2          | [Link](https://www.amazon.com/dp/B0038WL9EO)             |
+
+Make sure to select the motor according to the **required torque per joint** with the **safety margin** in mind.
+
+---
+
+## 3. Increasing Payload to 2 kg Using Gears
+
+You can increase torque by using gear reduction:
+
+- A **2:1 gear ratio** doubles the torque but halves the speed.
+- Example:  
+  If a motor produces 3 N·m, with a 2:1 gear ratio → 6 N·m output torque.
+
+---
+
+## 4. Disadvantages of Gear Systems
+
+- Slower movement  
+- Larger physical size  
+- More friction and energy loss  
+- Increased complexity in design and maintenance
+
+---
+
+## 5. Alternatives to Gear Systems
+
+- Use **higher torque motors** directly  
+- Choose **lighter materials** for robot arms  
+- Optimize **mechanical design** and center of mass  
+- Use **hydraulic or pneumatic** systems for heavy loads  
+- Implement **smart control strategies** (e.g., motion planning)
+
+---
+
+## 6. References
+
+- [Dynamixel Robot Manual](https://emanual.robotis.com/docs/en/dxl/)  
+- Robotics Torque Calculation Guides  
+- Gear System Principles
